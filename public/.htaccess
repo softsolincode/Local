@@ -1,0 +1,43 @@
+# Apache / LiteSpeed Rewrite Configuration for Hostinger SPA + PHP API
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Enable Authorization header forwarding
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # If an /api request arrives, route to api/index.php (if backend is in public_html/api)
+  RewriteCond %{REQUEST_URI} ^/api(/.*)?$ [NC]
+  RewriteCond %{DOCUMENT_ROOT}/api/index.php -f
+  RewriteRule ^api(/.*)?$ api/index.php [QSA,L]
+
+  # If backend is uploaded inside public_html/server
+  RewriteCond %{REQUEST_URI} ^/server(/.*)?$ [NC]
+  RewriteCond %{DOCUMENT_ROOT}/server/index.php -f
+  RewriteRule ^server(/.*)?$ server/index.php [QSA,L]
+
+  # If backend-php is uploaded at root level
+  RewriteCond %{REQUEST_URI} ^/api(/.*)?$ [NC]
+  RewriteCond %{DOCUMENT_ROOT}/backend-php/index.php -f
+  RewriteRule ^api(/.*)?$ backend-php/index.php [QSA,L]
+
+  # If file or folder physically exists, serve it
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # All other frontend SPA routes fallback to index.html
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Security: Block direct downloads of sqlite databases
+<FilesMatch "\.(sqlite|db)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+  </IfModule>
+</FilesMatch>

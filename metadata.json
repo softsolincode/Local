@@ -1,0 +1,6 @@
+{
+  "name": "StockTrack - Inventory Management",
+  "description": "Multi-tenant stock and inventory control with isolated SQLite databases per user, standalone PHP REST API, and modern React JSX frontend.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
