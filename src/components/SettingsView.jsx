@@ -74,14 +74,14 @@ export default function SettingsView({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-6 max-w-4xl mx-auto">
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-6 max-w-10xl mx-auto">
       {/* Title */}
       <div className="pb-3 border-b border-slate-100">
         <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
-          System Settings & SQLite Database
+          System Settings 
         </h3>
         <p className="text-xs text-slate-500">
-          Organization branding, database status, and backup & restore management
+          Organization branding, backup & restore management
         </p>
       </div>
 
@@ -111,7 +111,7 @@ export default function SettingsView({
       </div>
 
       {/* SQLite Architecture Status */}
-      <div className="bg-sky-50/70 border border-sky-200 p-4 rounded-xl space-y-2">
+      {/* <div className="bg-sky-50/70 border border-sky-200 p-4 rounded-xl space-y-2">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-extrabold text-sky-900 uppercase tracking-wider flex items-center gap-1.5">
             <span>🗄️</span> SQLite Storage Engine
@@ -140,7 +140,7 @@ export default function SettingsView({
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Backup & Actions */}
       <div className="space-y-3 pt-2 border-t border-slate-200">

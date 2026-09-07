@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState  ,useEffect} from 'react';
 
 export default function TransactionsView({
-  transactions,
+  transactions = [],
   onOpenTxModal,
   onDeleteTx,
   onOpenProductStatement,
+  gettransaction
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -19,8 +20,13 @@ export default function TransactionsView({
     );
   });
 
+  useEffect(() => {
+    gettransaction()
+  }, [gettransaction])
+  
+
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-4 max-w-5xl mx-auto">
+    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-4 max-w-10xl mx-auto">
       {/* Header & Controls */}
       <div className="space-y-3 pb-2 border-b border-slate-100">
         <div className="flex justify-between items-center">

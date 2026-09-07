@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { api } from '../lib/api';
+
+
 
 export default function AuthView({ onAuthSuccess, onShowToast }) {
   const [mode, setMode] = useState('login'); // 'login' | 'register'
@@ -40,25 +43,29 @@ export default function AuthView({ onAuthSuccess, onShowToast }) {
     setLoading(true);
     try {
       if (mode === 'register') {
-        const res = await fetch('/server/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ username: u, password: p, pin: recoveryPin }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Registration failed');
+        // const res = await fetch('/server/api/auth/register', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   credentials: 'include',
+        //   body: JSON.stringify({ username: u, password: p, pin: recoveryPin }),
+        // });
+        // const data = await res.json();
+
+           const data = await api.register(u, p, recoveryPin);
+        // if (!res.ok) throw new Error(data.error || 'Registration failed');
         onShowToast('Account registered successfully with private SQLite DB!');
         onAuthSuccess(data.user);
       } else {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ username: u, password: p }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Login failed');
+        // const res = await fetch('/api/auth/login', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   credentials: 'include',
+        //   body: JSON.stringify({ username: u, password: p }),
+        // });
+        // const data = await res.json();
+        const data = await api.login(u, p);
+
+        // if (!res.ok) throw new Error(data.error || 'Login failed');
         onShowToast('Welcome back!');
         onAuthSuccess(data.user);
       }

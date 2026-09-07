@@ -129,7 +129,30 @@ if ($path === '/api/auth/register' && $method === 'POST') {
     // Provision private user SQLite database
     DatabaseManager::getUserDb($userId);
 
-    setcookie('stock_session', $token, time() + 30 * 86400, '/', '', false, true);
+    // setcookie('stock_session', $token, time() + 30 * 86400, '/', '', false, true);
+
+   $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (strpos($origin, 'http://localhost:') === 0) {
+    // Development only
+    header(
+        'Set-Cookie: stock_session=' . $token .
+        '; Max-Age=' . (30 * 86400) .
+        '; Path=/; Secure; HttpOnly; SameSite=None',
+        false
+    );
+} else {
+    // Production — unchanged
+    setcookie(
+        'stock_session',
+        $token,
+        time() + (30 * 86400),
+        '/',
+        '',
+        false,
+        true
+    );
+}
     sendResponse([
         'success' => true,
         'message' => 'Registered successfully with private SQLite database',
@@ -168,7 +191,29 @@ if ($path === '/api/auth/login' && $method === 'POST') {
 
     $mainDb->prepare("UPDATE users SET last_login = datetime('now') WHERE id = ?")->execute([$user['id']]);
 
-    setcookie('stock_session', $token, time() + 30 * 86400, '/', '', false, true);
+    // setcookie('stock_session', $token, time() + 30 * 86400, '/', '', false, true);
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (strpos($origin, 'http://localhost:') === 0) {
+    // Development: localhost frontend -> HTTPS API
+    header(
+        'Set-Cookie: stock_session=' . $token .
+        '; Max-Age=' . (30 * 86400) .
+        '; Path=/; Secure; HttpOnly; SameSite=None',
+        false
+    );
+} else {
+    // Production: keep existing behavior
+    setcookie(
+        'stock_session',
+        $token,
+        time() + (30 * 86400),
+        '/',
+        '',
+        false,
+        true
+    );
+}
     sendResponse([
         'success' => true,
         'message' => 'Logged in successfully',
@@ -219,7 +264,30 @@ if ($path === '/api/auth/logout' && $method === 'POST') {
             $mainDb->prepare("DELETE FROM sessions WHERE token = ?")->execute([$token]);
         }
     }
-    setcookie('stock_session', '', time() - 3600, '/', '', false, true);
+    // setcookie('stock_session', '', time() - 3600, '/', '', false, true);
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (strpos($origin, 'http://localhost:') === 0) {
+    header(
+        'Set-Cookie: stock_session=;' .
+        ' Max-Age=0;' .
+        ' Path=/;' .
+        ' Secure;' .
+        ' HttpOnly;' .
+        ' SameSite=None',
+        false
+    );
+} else {
+    setcookie(
+        'stock_session',
+        '',
+        time() - 3600,
+        '/',
+        '',
+        false,
+        true
+    );
+}
     sendResponse(['success' => true, 'message' => 'Logged out successfully']);
 }
 
@@ -269,6 +337,7 @@ $userDb = DatabaseManager::getUserDb((int)$currentUser['id']);
 // ---------------- DASHBOARD ----------------
 if ($path === '/api/dashboard' && $method === 'GET') {
     $prods = $userDb->query("SELECT * FROM products ORDER BY name ASC")->fetchAll();
+    // $txs = $userDb->query("SELECT * FROM transactions ORDER BY date DESC, id DESC")->fetchAll();
     $txs = $userDb->query("SELECT * FROM transactions ORDER BY date DESC, id DESC")->fetchAll();
 
     $totalStockUnits = 0;
@@ -327,7 +396,7 @@ if ($path === '/api/dashboard' && $method === 'GET') {
         }
     }
 
-    $recentTxs = array_slice($txs, 0, 8);
+    $recentTxs = array_slice($txs, 0, 7);
 
     sendResponse([
         'user' => [
@@ -507,6 +576,78 @@ if ($path === '/api/transactions' && $method === 'GET') {
     sendResponse(['transactions' => $txs]);
 }
 
+
+if ($path === '/api/datetransactions' && $method === 'POST') {
+
+    $fromDate = trim($body['fromDate'] ?? '');
+    $toDate   = trim($body['toDate'] ?? '');
+    $product  = trim($body['product'] ?? 'all');
+
+    // Validate dates
+    if (!$fromDate || !$toDate) {
+        sendResponse([
+            'error' => 'From date and To date are required'
+        ], 400);
+    }
+
+    // Validate date range
+    if ($fromDate > $toDate) {
+        sendResponse([
+            'error' => 'From date cannot be greater than To date'
+        ], 400);
+    }
+
+    /*
+     * If product = "all"
+     *     → return transactions for all products
+     *
+     * If product contains a product name
+     *     → return only that product's transactions
+     */
+
+    if (strtolower($product) === 'all') {
+
+        $stmt = $userDb->prepare("
+            SELECT *
+            FROM transactions
+            WHERE date >= ?
+              AND date <= ?
+            ORDER BY date DESC, id DESC
+        ");
+
+        $stmt->execute([
+            $fromDate,
+            $toDate
+        ]);
+
+    } else {
+
+        $stmt = $userDb->prepare("
+            SELECT *
+            FROM transactions
+            WHERE date >= ?
+              AND date <= ?
+              AND LOWER(product_name) = LOWER(?)
+            ORDER BY date DESC, id DESC
+        ");
+
+        $stmt->execute([
+            $fromDate,
+            $toDate,
+            $product
+        ]);
+    }
+
+    $txs = $stmt->fetchAll();
+
+    sendResponse([
+        'success' => true,
+        'fromDate' => $fromDate,
+        'toDate' => $toDate,
+        'product' => strtolower($product) === 'all' ? 'all' : $product,
+        'transactions' => $txs
+    ]);
+}
 if ($path === '/api/transactions' && $method === 'POST') {
     $date = trim($body['date'] ?? date('Y-m-d'));
     $productName = trim($body['product_name'] ?? '');

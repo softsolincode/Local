@@ -31,6 +31,7 @@ export default function App() {
 
   // Toast State
   const [toast, setToast] = useState({ show: false, message: '', type: 'success', undoFn: null });
+  const [isPageLoading, setIsPageLoading] = useState(false);
 
   // Modals State
   const [txModalOpen, setTxModalOpen] = useState(false);
@@ -52,14 +53,138 @@ export default function App() {
   });
 
   const [statementProductName, setStatementProductName] = useState(null);
+  const [dateRangeTransactions, setDateRangeTransactions] = useState([]);
+
+  // const showToast = useCallback((message, type = 'success', undoFn = null) => {
+  //   setToast({ show: true, message, type, undoFn });
+  // }, []);
+
+  // const hideToast = useCallback(() => {
+  //   setToast((prev) => ({ ...prev, show: false }));
+  // }, []);
+
+
 
   const showToast = useCallback((message, type = 'success', undoFn = null) => {
-    setToast({ show: true, message, type, undoFn });
+    setToast({
+      show: true,
+      message,
+      type,
+      undoFn
+    });
   }, []);
 
   const hideToast = useCallback(() => {
-    setToast((prev) => ({ ...prev, show: false }));
+    setToast((prev) => ({
+      ...prev,
+      show: false
+    }));
   }, []);
+
+  useEffect(() => {
+    if (!toast.show) return;
+
+    const timer = setTimeout(() => {
+      hideToast();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [toast.show, hideToast]);
+
+
+
+
+  const getdash = useCallback(async () => {
+    try {
+      const dashData = await api.getDashboard().catch(() => null)
+      if (dashData) {
+        setMetrics(dashData.metrics);
+        setRecentTransactions((dashData.recentTransactions || []).slice(0, 7));
+        if (dashData.user) {
+          setUser((prev) => ({ ...prev, ...dashData.user }));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load application data:', err);
+    }
+
+  }, []);
+
+
+
+  const gettransaction = useCallback(async () => {
+    try {
+      const txsData = await api.getTransactions().catch(() => ({ transactions: [] }))
+
+
+
+      // console.log(dashData , "dadadadadada");
+
+
+      // if (dashData) {
+      //   setMetrics(dashData.metrics);
+
+
+      //   setRecentTransactions((dashData.recentTransactions || []).slice(0 ,7));
+      //   if (dashData.user) {
+      //     setUser((prev) => ({ ...prev, ...dashData.user }));
+      //   }
+      // }
+
+      // setProducts(prodsData.products || []);
+      setTransactions(txsData.transactions || []);
+    } catch (err) {
+      console.error('Failed to load application data:', err);
+    }
+  }, []);
+
+
+  const GetDateWiseTxs = useCallback(async ({ fromDate,
+    toDate,
+    product }) => {
+    try {
+      const txsData = await api.GetDateWiseTxs({
+        fromDate,
+        toDate,
+        product , 
+        
+      }).catch(() => ({ transactions: [] }))
+      // setTransactions(txsData.transactions || []);
+setDateRangeTransactions(txsData.transactions || []);
+    } catch (err) {
+      console.error('Failed to load application data:', err);
+    }
+  }, []);
+
+
+
+  const GetReports = useCallback(async () => {
+    try {
+      const [prodsData, txsData] = await Promise.all([
+        api.getProducts().catch(() => ({ products: [] })),
+        api.getTransactions().catch(() => ({ transactions: [] })),
+      ]);
+
+      setProducts(prodsData.products || []);
+      setTransactions(txsData.transactions || []);
+    } catch (err) {
+      console.error('Failed to load GetReports data:', err);
+    }
+  }, []);
+
+
+
+  const GetInventory = useCallback(async () => {
+    try {
+      const prodsData = await api.getProducts().catch(() => ({ products: [] }))
+      setProducts(prodsData.products || []);
+    } catch (err) {
+      console.error('Failed to load application data:', err);
+    }
+  }, []);
+
+
+
 
   // Fetch full state from SQLite backend
   const loadAppData = useCallback(async () => {
@@ -70,9 +195,15 @@ export default function App() {
         api.getTransactions().catch(() => ({ transactions: [] })),
       ]);
 
+
+      // console.log(dashData , "dadadadadada");
+
+
       if (dashData) {
         setMetrics(dashData.metrics);
-        setRecentTransactions(dashData.recentTransactions || []);
+
+
+        setRecentTransactions((dashData.recentTransactions || []).slice(0, 7));
         if (dashData.user) {
           setUser((prev) => ({ ...prev, ...dashData.user }));
         }
@@ -90,6 +221,8 @@ export default function App() {
     const checkAuth = async () => {
       try {
         const data = await api.getMe();
+        // console.log(data  ,  "dadada tjahjhjahjsdhahh ");
+
         if (data.authenticated && data.user) {
           setUser(data.user);
           await loadAppData();
@@ -112,6 +245,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    setIsPageLoading(true);
     try {
       await api.logout();
       setUser(null);
@@ -122,11 +256,15 @@ export default function App() {
       showToast('Logged out successfully');
     } catch (err) {
       showToast('Logout error', 'error');
+    } finally {
+      setIsPageLoading(false);
     }
+
   };
 
   // Product Operations
   const handleSaveProduct = async (productData) => {
+    setIsPageLoading(true);
     try {
       if (productData.id) {
         await api.updateProduct(productData.id, productData);
@@ -137,9 +275,13 @@ export default function App() {
       }
       setProductModalOpen(false);
       setProductToEdit(null);
-      await loadAppData();
+      GetInventory()
+      // await loadAppData();
     } catch (err) {
       showToast(err.message || 'Failed to save product', 'error');
+    }
+    finally {
+      setIsPageLoading(false);
     }
   };
 
@@ -150,10 +292,11 @@ export default function App() {
       message: `Are you sure you want to delete "${prod.name}" from your catalog?`,
       onConfirm: async () => {
         setDeleteConfirm((prev) => ({ ...prev, isOpen: false }));
+        setIsPageLoading(true);
         try {
           const result = await api.deleteProduct(prod.id);
-          await loadAppData();
-
+          // await loadAppData();
+          await GetInventory()
           // Undo support: offer to re-create the deleted product
           showToast(`Deleted "${prod.name}"`, 'success', async () => {
             try {
@@ -164,14 +307,21 @@ export default function App() {
                 reminder_date: prod.reminder_date,
                 threshold: prod.threshold,
               });
-              await loadAppData();
+              // await loadAppData();
+              await GetInventory()
+
               showToast(`Restored product "${prod.name}"`);
             } catch (err) {
               showToast('Failed to restore product', 'error');
             }
+            finally {
+              setIsPageLoading(false);
+            }
           });
         } catch (err) {
           showToast(err.message || 'Failed to delete product', 'error');
+        } finally {
+          setIsPageLoading(false);
         }
       },
     });
@@ -181,7 +331,7 @@ export default function App() {
     try {
       const res = await api.importCsv(csvText);
       showToast(`Import done: ${res.added} added, ${res.updated} updated`);
-      await loadAppData();
+      // await loadAppData();
     } catch (err) {
       showToast(err.message || 'Import failed', 'error');
     }
@@ -189,6 +339,7 @@ export default function App() {
 
   // Transaction Operations
   const handleSaveTransaction = async (txData) => {
+    setIsPageLoading(true);
     try {
       if (txData.id) {
         await api.updateTransaction(txData.id, txData);
@@ -199,13 +350,17 @@ export default function App() {
       }
       setTxModalOpen(false);
       setTxToEdit(null);
-      await loadAppData();
+      gettransaction()
+      // await loadAppData();
     } catch (err) {
       showToast(err.message || 'Failed to record transaction', 'error');
+    } finally {
+      setIsPageLoading(false);
     }
   };
 
   const handleDeleteTransaction = (tx) => {
+    setIsPageLoading(true);
     setDeleteConfirm({
       isOpen: true,
       title: 'Delete Transaction?',
@@ -214,10 +369,15 @@ export default function App() {
         setDeleteConfirm((prev) => ({ ...prev, isOpen: false }));
         try {
           await api.deleteTransaction(tx.id);
-          await loadAppData();
+          await gettransaction()
+
+          // await loadAppData();
+
+
 
           // Undo support: offer to re-create transaction
           showToast(`Deleted ${tx.type} transaction`, 'success', async () => {
+            setIsPageLoading(true);
             try {
               await api.createTransaction({
                 date: tx.date,
@@ -226,14 +386,20 @@ export default function App() {
                 qty: tx.qty,
                 description: tx.description,
               });
-              await loadAppData();
+              // await loadAppData();
+              await gettransaction()
+
               showToast('Transaction restored');
             } catch (err) {
               showToast('Failed to restore transaction', 'error');
+            } finally {
+              setIsPageLoading(false);
             }
           });
         } catch (err) {
           showToast(err.message || 'Failed to delete transaction', 'error');
+        } finally {
+          setIsPageLoading(false);
         }
       },
     });
@@ -283,7 +449,7 @@ export default function App() {
         <div className="w-10 h-10 rounded-xl bg-sky-600 flex items-center justify-center font-black text-xl mb-3 animate-pulse">
           S
         </div>
-        <p className="text-xs text-slate-400 font-semibold">Connecting to SQLite Storage...</p>
+        <p className="text-xs text-slate-400 font-semibold">Loading Please Wait...</p>
       </div>
     );
   }
@@ -300,6 +466,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100/60 text-slate-900 pb-20 md:pb-6">
+
+
+      {isPageLoading && (
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex flex-col items-center justify-center text-white z-[100] transition-opacity">
+          <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-sm font-semibold tracking-wide text-slate-100">Processing, please wait...</p>
+        </div>
+      )}
       {/* Toast Notification */}
       <Toast toast={toast} onClose={hideToast} />
 
@@ -315,14 +489,19 @@ export default function App() {
       {/* Main Content Area */}
       <div className="md:ml-60 flex flex-col min-h-screen">
         {/* Top Navbar */}
-        <Navbar
-          user={user}
-          orgName={user.org_name}
-          onLogoutClick={() => setLogoutModalOpen(true)}
-        />
+        <div className="block md:hidden sticky top-0 left-0 right-0">
+          <Navbar
+            user={user}
+            orgName={user.org_name}
+            onLogoutClick={() => setLogoutModalOpen(true)}
+          />
+
+        </div>
+
+
 
         {/* View Router */}
-        <main className="flex-1 p-3 sm:p-5">
+        <main className="flex-1">
           {currentSection === 'dashboard' && (
             <DashboardView
               user={user}
@@ -332,6 +511,7 @@ export default function App() {
               onNavigate={setCurrentSection}
               onSyncCloud={handleSyncCloud}
               onOpenProductStatement={(pName) => setStatementProductName(pName)}
+              getdash={getdash}
             />
           )}
 
@@ -346,6 +526,7 @@ export default function App() {
               }}
               onDeleteTx={handleDeleteTransaction}
               onOpenProductStatement={(pName) => setStatementProductName(pName)}
+              gettransaction={gettransaction}
             />
           )}
 
@@ -361,6 +542,7 @@ export default function App() {
               onOpenProductStatement={(pName) => setStatementProductName(pName)}
               onImportCsv={handleImportCsv}
               onShowToast={showToast}
+              GetInventory={GetInventory}
             />
           )}
 
@@ -373,6 +555,9 @@ export default function App() {
               onUpdateOrgSettings={handleUpdateOrgSettings}
               onOpenProductStatement={(pName) => setStatementProductName(pName)}
               onShowToast={showToast}
+              GetReports={GetReports}
+              GetDateWiseTxs={GetDateWiseTxs}
+              dateRangeTransactions = {dateRangeTransactions}
             />
           )}
 

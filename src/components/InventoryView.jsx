@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef , useEffect } from 'react';
 
 export default function InventoryView({
   products,
@@ -8,6 +8,7 @@ export default function InventoryView({
   onOpenProductStatement,
   onImportCsv,
   onShowToast,
+  GetInventory
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef(null);
@@ -74,9 +75,12 @@ export default function InventoryView({
     };
     reader.readAsText(file);
   };
+useEffect(() => {
+  GetInventory()
+}, [GetInventory])
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-4 max-w-5xl mx-auto">
+    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-4 max-w-10xl mx-auto">
       {/* Header & Action Bar */}
       <div className="space-y-3 pb-2 border-b border-slate-100">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">

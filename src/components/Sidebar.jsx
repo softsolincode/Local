@@ -22,9 +22,9 @@ export default function Sidebar({ currentSection, onSelectSection, user, orgName
           <div className="font-black text-slate-900 text-lg tracking-tight truncate">
             {displayTitle}
           </div>
-          <div className="text-[10px] font-bold text-sky-700 uppercase tracking-wider">
+          {/* <div className="text-[10px] font-bold text-sky-700 uppercase tracking-wider">
             SQLite Pro
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -41,11 +41,10 @@ export default function Sidebar({ currentSection, onSelectSection, user, orgName
             <button
               key={item.id}
               onClick={() => onSelectSection(item.id)}
-              className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                isActive
+              className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${isActive
                   ? 'bg-white text-sky-700 shadow-sm border border-slate-200/80'
                   : 'text-slate-600 hover:bg-white/60 hover:text-slate-900'
-              }`}
+                }`}
             >
               <span className="text-base">{item.icon}</span>
               <span>{item.label}</span>
@@ -55,17 +54,13 @@ export default function Sidebar({ currentSection, onSelectSection, user, orgName
       </nav>
 
       {/* Footer User Info */}
-      <div className="pt-3 border-t border-slate-300/80">
+      {/* <div className="pt-3 flex border-t border-slate-300/80">
         <div
           onClick={onLogoutClick}
           className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/70 hover:bg-white border border-slate-300/70 cursor-pointer transition-all"
           title="Click to logout"
         >
-          <img
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-            alt="Avatar"
-            className="w-8 h-8 rounded-full object-cover border border-slate-300"
-          />
+        
           <div className="flex-1 min-w-0">
             <div className="text-xs font-extrabold text-slate-800 truncate">
               {user?.username || 'User'}
@@ -74,6 +69,99 @@ export default function Sidebar({ currentSection, onSelectSection, user, orgName
               Logout
             </div>
           </div>
+        </div>
+      </div> */}
+
+
+
+      <div className="pt-3 border-t border-slate-200">
+        <div
+          onClick={onLogoutClick}
+          className="
+      group
+      flex items-center justify-between
+      p-3
+      rounded-xl
+      bg-gradient-to-r from-white to-slate-50
+      border border-slate-200
+      hover:border-rose-300
+      hover:shadow-md
+      cursor-pointer
+      transition-all duration-200
+    "
+          title="Logout"
+        >
+          {/* Left Side */}
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Avatar */}
+            <div
+              className="
+          w-10 h-10
+          rounded-full
+          bg-gradient-to-br
+          from-blue-500
+          to-indigo-600
+          flex items-center justify-center
+          text-white
+          font-bold
+          text-sm
+          shrink-0
+        "
+            >
+              {(user?.username?.[0] || 'U').toUpperCase()}
+            </div>
+
+            {/* User Info */}
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-slate-800 truncate">
+                {user?.username || 'User'}
+              </div>
+
+              <div className="flex items-center gap-2">
+
+
+              </div>
+            </div>
+          </div>
+
+          {/* Logout Icon */}
+          <div
+            className="
+        w-9 h-9
+        rounded-lg
+        flex items-center justify-center
+        bg-rose-50
+        text-rose-600
+        group-hover:bg-rose-100
+        transition-all
+      "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-5 h-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m-3-3h9m0 0l-3-3m3 3l-3 3"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-2 px-1 flex items-center justify-between">
+          <span className="text-[12px] text-dark-400">
+            StockTrack ERP
+          </span>
+
+          <span className="text-[12px] text-dark-400">
+            Version 1.0.2
+          </span>
         </div>
       </div>
     </aside>

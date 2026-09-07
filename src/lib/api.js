@@ -99,6 +99,11 @@ export const api = {
   getTransactions: () =>
     request('/transactions', { method: 'GET' }),
 
+  GetDateWiseTxs: ({ fromDate,
+                  toDate,
+                  product }) =>
+    request('/datetransactions', { method: 'POST', body: JSON.stringify({ fromDate , toDate , product  }) }),
+
   createTransaction: (txData) =>
     request('/transactions', { method: 'POST', body: JSON.stringify(txData) }),
 

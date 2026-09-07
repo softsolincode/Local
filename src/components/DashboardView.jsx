@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 
 export default function DashboardView({
   user,
@@ -8,24 +8,44 @@ export default function DashboardView({
   onNavigate,
   onSyncCloud,
   onOpenProductStatement,
+  getdash
 }) {
   const [showAllLowStock, setShowAllLowStock] = useState(false);
 
   const totalStock = metrics?.totalStockUnits || 0;
-  const totalProducts = metrics?.totalProducts || products?.length || 0;
+  const totalProducts = metrics?.totalProducts 
   const totalIn = metrics?.totalPurchased || 0;
   const totalOut = metrics?.totalSold || 0;
   const reminders = metrics?.reminders || [];
+
   const lowStock = metrics?.lowStock || [];
 
-  const displayLimit = 3;
+
+  const displayLimit = 10;
   const displayedLowStock = showAllLowStock ? lowStock : lowStock.slice(0, displayLimit);
 
+  useEffect(() => {
+    getdash()
+  }, [])
+  
+
+
+  // console.log(metrics.reminders , "sghsjkhghghhdhfj");
+
+
+
+
   return (
-    <div className="space-y-4 max-w-5xl mx-auto">
+    <div className="space-y-4 max-w-10xl mx-auto">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-sky-600 via-sky-700 to-sky-900 rounded-2xl p-5 text-white shadow-lg shadow-sky-900/20">
-        <div className="flex justify-between items-start mb-4">
+      <div className="sticky top-0 z-40
+    relative overflow-hidden
+    bg-gradient-to-br from-sky-600 via-sky-700 to-sky-900
+    
+    p-1 sm:p-1
+    text-white
+    shadow-lg shadow-sky-900/20">
+        <div className="flex justify-between  items-start mb-1">
           <div>
             <h2 className="text-xl font-extrabold tracking-tight">
               Welcome, {user?.username || 'User'} 👋
@@ -34,14 +54,14 @@ export default function DashboardView({
               Inventory & Stock Control Overview
             </p>
           </div>
-          <div className="bg-white/20 backdrop-blur-md border border-white/30 px-3 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 shadow-xs">
+          {/* <div className="bg-white/20 backdrop-blur-md border border-white/30 px-3 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             Live SQLite Stats
-          </div>
+          </div> */}
         </div>
 
         {/* Balance Card inside Hero */}
-        <div className="bg-slate-900/40 backdrop-blur-md border border-white/20 rounded-xl p-4">
+        <div className="bg-slate-900/40 backdrop-blur-md border border-white/20 rounded-xl p-2">
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-sky-200 uppercase tracking-wider mb-1">
             <span className="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
             Total Available Inventory Stock
@@ -58,18 +78,128 @@ export default function DashboardView({
       </div>
 
       {/* Reminders Alert */}
-      {reminders.length > 0 && (
+      {/* {reminders.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs">
           <span className="text-base">⏰</span>
           <span>
             Reminder Due for: <span className="font-extrabold text-amber-950">{reminders.join(', ')}</span>
           </span>
         </div>
+ 
+ )} */}
+
+
+
+
+
+
+
+
+
+
+      {/* Reminders Alert */}
+      {reminders.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-2  sm:p-2 shadow-sm">
+
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-base">
+                ⏰
+              </div>
+
+              <div>
+                <h4 className="text-xs font-extrabold text-amber-950 uppercase tracking-wide">
+                  Reminder Due
+                </h4>
+
+                <p className="text-[9px] sm:text-[10px] font-semibold text-amber-600">
+                  {reminders.length} reminder{reminders.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+
+            <span className="bg-amber-200 text-amber-900 px-2 py-1 rounded-md text-[9px] font-extrabold">
+              {reminders.length}
+            </span>
+          </div>
+
+          {/* Maximum 3 Products */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {reminders.slice(0, 3).map((reminder) => (
+              <div
+                key={reminder.id}
+                className="min-w-0 bg-white border border-amber-200 rounded-xl px-3 py-2.5 hover:border-amber-300 hover:shadow-sm transition-all"
+              >
+                {/* Product */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 flex-shrink-0 rounded-lg bg-amber-100 flex items-center justify-center text-xs">
+                    📦
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="text-[11px] sm:text-xs font-extrabold text-amber-950 truncate">
+                      {reminder.name}
+                    </div>
+
+                    {reminder.supplier && (
+                      <div className="text-[9px] text-amber-600 font-semibold truncate">
+                        {reminder.supplier}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="mt-2 pt-2 border-t border-amber-100">
+                  <div className="text-[8px] uppercase font-bold text-amber-500">
+                    Due Date
+                  </div>
+
+                  <div className="text-[10px] sm:text-[11px] font-extrabold text-amber-900">
+                    {reminder.reminder_date}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* More Reminders */}
+          {reminders.length > 3 && (
+            <div className="mt-0 text-[9px] font-bold text-amber-600 text-right">
+              + {reminders.length - 3} more reminders
+            </div>
+          )}
+        </div>
       )}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {/* Metrics Grid */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-        <div className="flex justify-between items-center mb-3">
+      <div className="bg-white border border-slate-200 p-3 shadow-xs">
+        <div className="flex justify-between items-center mb-1">
           <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
             Stock Summary Metrics
           </h3>
@@ -126,28 +256,24 @@ export default function DashboardView({
         </div>
       </div>
 
+      
       {/* Twin CTA Buttons */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <button
+      <div>
+      {/* <div className="grid grid-cols-2 gap-2.5"> */}
+        {/* <button
           onClick={onSyncCloud}
           className="py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
         >
           <span>☁️</span>
           <span>Sync SQLite Cloud</span>
-        </button>
-        <button
-          onClick={() => onNavigate('transaction')}
-          className="py-3 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white font-extrabold text-xs shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
-        >
-          <span>📑</span>
-          <span>Open Sheet →</span>
-        </button>
+        </button> */}
+        
       </div>
 
       {/* Lower Dashboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 m-0 gap-3.5">
         {/* Low Stock Alert */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+        <div className="bg-white border border-slate-200  p-1 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-2.5">
               <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
@@ -193,7 +319,7 @@ export default function DashboardView({
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+        <div className="bg-white border border-slate-200 p-2 shadow-xs">
           <div className="flex justify-between items-center mb-2.5">
             <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
               Recent Movements
@@ -222,9 +348,8 @@ export default function DashboardView({
                   >
                     <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${
-                          isPurchase ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                        }`}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${isPurchase ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                          }`}
                       >
                         {isPurchase ? '↓' : '↑'}
                       </div>
@@ -239,9 +364,8 @@ export default function DashboardView({
                       </div>
                     </div>
                     <div
-                      className={`text-xs font-extrabold ${
-                        isPurchase ? 'text-emerald-600' : 'text-rose-600'
-                      }`}
+                      className={`text-xs font-extrabold ${isPurchase ? 'text-emerald-600' : 'text-rose-600'
+                        }`}
                     >
                       {isPurchase ? '+' : '-'}{tx.qty} units
                     </div>
